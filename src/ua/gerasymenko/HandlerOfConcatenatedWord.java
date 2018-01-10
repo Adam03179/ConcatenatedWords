@@ -6,24 +6,33 @@ public class HandlerOfConcatenatedWord {
 
     private String firstLongestConcatWord = "";
     private String secondLongestConcatWord = "";
-    private Map<Character, Set<String>> words;
-    private boolean isRecursive = false;
-    private int numberOfConcatenatedWords = 0;
-    private List<String> cutWord = new LinkedList<>();
+    private String originalWord;
 
-    public HandlerOfConcatenatedWord(Map<Character, Set<String>> words) {
-        this.words = words;
+    private Set<String> sortedWords;
+    private Set<String> tempSet;
+    private Set<String> concatenatedWords;
+
+
+    public HandlerOfConcatenatedWord(Set<String> sortedWords) {
+        this.sortedWords = sortedWords;
+        this.concatenatedWords = new LinkedHashSet<>();
+        this.tempSet = new HashSet<>(sortedWords);
     }
 
+    //First two words which are concatenated is largest in the File, because words are sorted by length
     public void handle() {
-        for (Map.Entry<Character, Set<String>> entry : words.entrySet()) {
-            for (String word : entry.getValue()) {
-                isRecursive = false;
-                if (isConcatenated(word)) {
-                    numberOfConcatenatedWords++;
-                    checkForFirstPlaces(word);
+
+        for (String word : sortedWords) {
+            originalWord = word;
+            checkForConcatenated(word);
+            if (!concatenatedWords.isEmpty()) {
+                if (concatenatedWords.size() == 2) {
+                    Object[] result = concatenatedWords.toArray();
+                    firstLongestConcatWord = (String) result[0];
+                    secondLongestConcatWord = (String) result[1];
                 }
             }
+
         }
     }
 
@@ -35,46 +44,23 @@ public class HandlerOfConcatenatedWord {
         return secondLongestConcatWord;
     }
 
-    public int getNumberOfConcatenatedWords() {
-        return numberOfConcatenatedWords;
+    public Set<String> getConcatenatedWords() {
+        return concatenatedWords;
     }
 
-    private void checkForFirstPlaces(String word) {
-        if (firstLongestConcatWord.length() < word.length()) {
-            secondLongestConcatWord = firstLongestConcatWord;
-            firstLongestConcatWord = word;
-        } else if (secondLongestConcatWord.length() < word.length()) {
-            secondLongestConcatWord = word;
-        }
-    }
+    //recursively checking word if it concatenated
+    private void checkForConcatenated(String word) {
 
-    private boolean isConcatenated(String word) {
-        boolean result = false;
-        if (words.get(word.charAt(0)) == null) {
-            return false;
-        }
-        Set<String> tempSet = new HashSet<>(words.get(word.charAt(0)));
-
-        if (!isRecursive) {
-            tempSet.remove(word);
-        }
-
-        for (String str : tempSet) {
-            if (word.startsWith(str)) {
-                cutWord.add(word.substring(0, str.length()));
-                word = word.substring(str.length());
-                if (word.length() == 0) {
-                    return true;
-                } else {
-                    isRecursive = true;
-                    result = isConcatenated(word);
-                    if (!result && !cutWord.isEmpty()) {
-                        word = cutWord.get(cutWord.size() - 1) + word;
-                        cutWord.remove(cutWord.size() - 1);
-                    }
+        for (int i = 0; i < word.length(); i++) {
+            String left = word.substring(0, i + 1);
+            String right = word.substring(i + 1);
+            if (tempSet.contains(left)) {
+                if (tempSet.contains(right)) {
+                    concatenatedWords.add(originalWord);
+                    break;
                 }
+                checkForConcatenated(right);
             }
         }
-        return result;
     }
 }
